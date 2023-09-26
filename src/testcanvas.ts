@@ -1,115 +1,224 @@
 // Testing canvas ??
+// Za plotting graf
 
-class DrawingApp {
-    private canvas: HTMLCanvasElement;
-    private context: CanvasRenderingContext2D;
-    private paint: boolean;
 
-    private clickX: number[] = [];
-    private clickY: number[] = [];
-    private clickDrag: boolean[] = [];
+// let data = [16, 68, 20, 30, 54];
+// let labels = ["JAN","FEB","MAR","APR","MAY"];
 
-    constructor() {
-        let canvas = document.getElementById("canvas") as HTMLCanvasElement;
-        let context = canvas.getContext("2d");
-        context.lineCap = "round";
-        context.lineJoin = "round";
-        context.strokeStyle = "black";
-        context.lineWidth = 1;
+// c.fillStyle = "white";
+// c.fillRect(0, 0, 500, 500);
 
-        this.canvas = canvas;
-        this.context = context;
+// //draw the data
+// c.fillStyle = "blue";
+// for (let i = 0; i < data.length; i++) {
+//     const point = data[i];
+//     c.fillRect(40 + i * 100, 460 - point * 5, 50, point * 5);
+// }
 
-        this.redraw();
-        this.createUserEvents();
-    }
+// //axis
+// c.fillStyle = "black";
+// c.lineWidth = 2;
+// c.beginPath();
+// c.moveTo(30, 10);
+// c.lineTo(30, 460);
+// c.lineTo(490, 460);
+// c.stroke();
 
-    private createUserEvents() {
-        let canvas = this.canvas;
+// for (let i = 0; i < 6; i++) {
+//     c.fillText((5 - i) * 20 + "", 4, i * 80 + 60);
+//     c.beginPath(); 
+//     c.moveTo(25, i * 80 + 60); 
+//     c.lineTo(30, i * 80 + 60); 
+//     c.stroke();
+// }
+// for (let i = 0; i < 5; i++) {
+//     c.fillText(labels[i], 50 + i*100, 475);
+// }
 
-        canvas.addEventListener("mousedown", this.pressEventHandler);
-        canvas.addEventListener("mousemove", this.dragEventHandler);
-        canvas.addEventListener("mouseup", this.releaseEventHandler);
-        canvas.addEventListener("mouseout", this.cancelEventHandler);
+// Define ART-1 parameters
+const numInputs = 4; // Number of input nodes
+const numCategories = 5; // Number of categories
+const vigilanceParameter = 0.5; // Vigilance parameter (0-1)
 
-        document
-            .getElementById("clear-text")
-            .addEventListener("click", this.clearEventHandler);
-    }
+// Initialize weights and category memory
+const weights: number[][] = [];
+const categoryMemory: number[] = [];
 
-    private redraw() {
-        let clickX = this.clickX;
-        let context = this.context;
-        let clickDrag = this.clickDrag;
-        let clickY = this.clickY;
-
-        for (let i = 0; i < clickX.length; ++i) {
-            context.beginPath();
-            if (clickDrag[i] && i) {
-                context.moveTo(clickX[i - 1], clickY[i - 1]);
-            } else {
-                context.moveTo(clickX[i] - 1, clickY[i]);
-            }
-
-            context.lineTo(clickX[i], clickY[i]);
-            context.stroke();
-        }
-        context.closePath();
-    }
-
-    private addClick(x: number, y: number, dragging: boolean) {
-        this.clickX.push(x);
-        this.clickY.push(y);
-        this.clickDrag.push(dragging);
-    }
-
-    private clearCanvas() {
-        this.context
-            .clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.clickX = [];
-        this.clickY = [];
-        this.clickDrag = [];
-    }
-
-    private clearEventHandler = () => {
-        this.clearCanvas();
-    }
-
-    private releaseEventHandler = () => {
-        this.paint = false;
-        this.redraw();
-    }
-
-    private cancelEventHandler = () => {
-        this.paint = false;
-    }
-
-    private pressEventHandler = (e: MouseEvent) => {
-        let mouseX = e.pageX;
-        let mouseY = e.pageY;
-
-        mouseX -= this.canvas.offsetLeft;
-        mouseY -= this.canvas.offsetTop;
-
-        this.paint = true;
-        this.addClick(mouseX, mouseY, false);
-        this.redraw();
-    }
-
-    private dragEventHandler = (e: MouseEvent) => {
-        let mouseX = e.pageX;
-        let mouseY = e.pageY;
-
-        mouseX -= this.canvas.offsetLeft;
-        mouseY -= this.canvas.offsetTop;
-
-        if(this.paint) {
-            this.addClick(mouseX, mouseY, true);
-            this.redraw();
-        }
-
-        e.preventDefault();
+// Initialize the weights randomly
+for (let i = 0; i < numCategories; i++) {
+    weights[i] = new Array(numInputs);
+    for (let j = 0; j < numInputs; j++) {
+        weights[i][j] = Math.random(); // Initialize with random values between 0 and 1
     }
 }
 
-new DrawingApp();
+// Define a function to calculate the Euclidean distance between two vectors
+function euclideanDistance(input: number[], weight: number[]): number {
+    let sum = 0;
+    for (let i = 0; i < input.length; i++) {
+        sum += Math.pow(input[i] - weight[i], 2);
+    }
+    return Math.sqrt(sum);
+}
+
+// Define the ART-1 algorithm
+function art1(input: number[]): number | undefined {
+    // Compute the vigilance test
+    const inputNorm = Math.sqrt(input.reduce((acc, val) => acc + val ** 2, 0));
+    const categoryResponses: number[] = [];
+
+    for (let i = 0; i < numCategories; i++) {
+        const weightNorm = Math.sqrt(weights[i].reduce((acc, val) => acc + val ** 2, 0));
+        const response = input.reduce((acc, val, j) => acc + val * weights[i][j], 0) / (inputNorm * weightNorm);
+        categoryResponses[i] = response;
+    }
+
+    // Find the category with the highest response
+    const maxResponseIndex = categoryResponses.indexOf(Math.max(...categoryResponses));
+
+    // Check if the winner meets the vigilance criterion
+    if (categoryResponses[maxResponseIndex] >= vigilanceParameter) {
+        // Winner category found
+        // Update the weights of the winning category
+        for (let i = 0; i < numInputs; i++) {
+            weights[maxResponseIndex][i] = input[i];
+        }
+        return maxResponseIndex;
+    } else {
+        // No winner category found
+        return undefined;
+    }
+}
+
+// Example input vector
+const inputVector = [0.2, 0.4, 0.1, 0.5];
+
+// Run the ART-1 algorithm with the input vector
+const winnerCategory = art1(inputVector);
+
+if (winnerCategory !== undefined) {
+    console.log(`Input vector belongs to category ${winnerCategory}`);
+} else {
+    console.log(`No category found for the input vector`);
+}
+
+// Define canvas properties
+const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+const ctx = canvas.getContext("2d");
+
+const canvasWidth = canvas.width;
+const canvasHeight = canvas.height;
+const categoryColors = ["red", "green", "blue", "orange", "purple"];
+const animationSpeed = 500; // Speed of animation (milliseconds)
+
+
+// Initialize the canvas visualization
+function initializeCanvas() {
+    // Clear the canvas
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+    // Draw category labels
+    ctx.font = "14px Arial";
+    ctx.fillStyle = "black";
+
+    for (let i = 0; i < numCategories; i++) {
+        const labelX = 30 + i * 80; // Adjust the X position for labels
+        const labelY = 20;
+
+        ctx.fillText(`${i}`, labelX, labelY);
+
+        const categoryColor = categoryColors[i];
+        ctx.fillStyle = categoryColor;
+        ctx.fillRect(labelX - 20, labelY - 15, 15, 15); // Adjust the X and Y positions for rectangles
+        ctx.fillStyle = "black";
+    }
+}
+
+
+
+// Define the rectangular area
+const area = {
+    xMin: 2,
+    xMax: 5,
+    yMin: 2,
+    yMax: 5,
+};
+
+// Function to determine if a point is inside the area
+function isInsideArea(x: number, y: number): boolean {
+    return x >= area.xMin && x <= area.xMax && y >= area.yMin && y <= area.yMax;
+}
+
+// Example points (x, y coordinates)
+const points: { x: number; y: number }[] = [
+    { x: 3, y: 4 },  // Inside the area
+    { x: 1, y: 2 },  // Outside the area
+    { x: 4, y: 6 },  // Outside the area
+    { x: 5, y: 3 },  // Inside the area
+    { x: 1, y: 1 },  
+    { x: 3, y: 4 },  
+    { x: 2, y: 5 },  
+    { x: 1, y: 5 },  
+    { x: 5, y: 5 },  
+];
+
+// Check if each point is inside the area and log the result
+points.forEach((point, index) => {
+    const result = isInsideArea(point.x, point.y);
+    console.log(`Point ${index + 1} (${point.x}, ${point.y}) is inside the area: ${result}`);
+});
+
+
+// Function to execute the ART-1 algorithm and update the canvas
+function updateCanvas(input: { x: number; y: number }, isInside: boolean) {
+    // Clear the canvas
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+    // Draw category labels
+    initializeCanvas();
+
+    // Highlight the winning category (inside/outside) with the respective color
+    ctx.fillStyle = isInside ? "green" : "red";
+
+    // Draw a rectangle next to the text to indicate the result
+    ctx.fillRect(150, canvasHeight - 25, 15, 15);
+
+    // Draw the input point
+    ctx.fillStyle = "gray";
+    ctx.font = "14px Arial";
+    ctx.fillText(`Point (${input.x}, ${input.y})`, 10, canvasHeight - 10);
+}
+
+// Function to execute the ART-1 algorithm and update the canvas
+function processInput(input: { x: number; y: number }) {
+    const isInside = isInsideArea(input.x, input.y);
+
+    // Update the canvas visualization with the result
+    updateCanvas(input, isInside);
+
+    // Log the result to the console
+    console.log(`Point (${input.x}, ${input.y}) is inside the area: ${isInside}`);
+}
+
+// Start the animation
+let currentStep = 0;
+function animateNextStep() {
+    if (currentStep < points.length) {
+        const inputPoint = points[currentStep];
+
+        // Process the input point and update the canvas
+        processInput(inputPoint);
+
+        // Increment the step
+        currentStep++;
+
+        // Schedule the next animation frame
+        setTimeout(animateNextStep, animationSpeed);
+    }
+}
+
+// Initialize the canvas visualization
+initializeCanvas();
+
+// Start the animation
+animateNextStep();
