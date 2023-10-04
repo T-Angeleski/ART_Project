@@ -20,21 +20,33 @@ const generateARTButtons = () => {
     const startBtn = document.createElement("button");
     const restartBtn = document.createElement("button");
     const drawRandom = document.createElement("button");
+    const clearBtn = document.createElement("button");
     startBtn.setAttribute("type", "button");
     restartBtn.setAttribute("type", "button");
     drawRandom.setAttribute("type", "button");
+    clearBtn.setAttribute("type", "button");
     startBtn.innerHTML = "Start";
     restartBtn.innerHTML = "Restart";
     drawRandom.innerHTML = "Draw random points";
+    clearBtn.innerHTML = "Clear";
     buttonsDiv.appendChild(startBtn);
     buttonsDiv.appendChild(restartBtn);
     buttonsDiv.appendChild(drawRandom);
+    buttonsDiv.appendChild(clearBtn);
     // Just testing
+    startBtn.addEventListener("click", () => {
+        animateNextStep();
+    });
     drawRandom.addEventListener("click", () => {
         const posX = Math.floor(Math.random() * 350);
         const posY = Math.floor(Math.random() * 350);
         ctx.fillStyle = "blue";
         ctx.fillRect(posX, posY, 50, 50);
+    });
+    clearBtn.addEventListener("click", () => {
+        ctx.reset();
+        currentStep = 0;
+        initializeCanvas();
     });
 };
 //# sourceMappingURL=generatorHTML.js.map

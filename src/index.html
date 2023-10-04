@@ -16,26 +16,30 @@
     <div id="container" class="container-fluid">
       <div class="row">
         <div class="col-md-4" id="left">
-
           <div class="form-group">
             <form action="post">
               <select name="networks" id="select-network">
-                <option value="undefined" onclick="generateButtons(this.value)">-----------</option>
-                <option value="art-network" onclick="generateButtons(this.value)">Adaptive Resonance Theory (ART)</option>
+                <option value="undefined" onclick="generateButtons(this.value)">
+                  -----------
+                </option>
+                <option
+                  value="art-network"
+                  onclick="generateButtons(this.value)"
+                >
+                  Adaptive Resonance Theory (ART)
+                </option>
               </select>
             </form>
 
-            <div id="buttons">
-              
-            </div>
+            <div id="buttons"></div>
           </div>
         </div>
         <div class="col-md-8" id="right">
           <canvas
             id="canvas"
             style="border: 1px solid black"
-            width="400"
-            height="400"
+            width="750"
+            height="750"
           ></canvas>
         </div>
       </div>

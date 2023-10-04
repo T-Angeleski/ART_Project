@@ -109,7 +109,7 @@ const ctx = canvas.getContext("2d");
 const canvasWidth = canvas.width;
 const canvasHeight = canvas.height;
 const categoryColors = ["red", "green", "blue", "orange", "purple"];
-const animationSpeed = 500; // Speed of animation (milliseconds)
+const animationSpeed = 1000; // Speed of animation (milliseconds)
 
 
 // Initialize the canvas visualization
@@ -132,16 +132,20 @@ function initializeCanvas() {
         ctx.fillRect(labelX - 20, labelY - 15, 15, 15); // Adjust the X and Y positions for rectangles
         ctx.fillStyle = "black";
     }
+
+    // Draw area for test??
+    ctx.fillStyle = "purple";
+    ctx.fillRect(area.xMin, area.yMin, area.xMax - area.xMin, area.yMax - area.yMin);
 }
 
 
 
 // Define the rectangular area
 const area = {
-    xMin: 2,
-    xMax: 5,
-    yMin: 2,
-    yMax: 5,
+    xMin: 200,
+    xMax: 400,
+    yMin: 200,
+    yMax: 400,
 };
 
 // Function to determine if a point is inside the area
@@ -150,17 +154,22 @@ function isInsideArea(x: number, y: number): boolean {
 }
 
 // Example points (x, y coordinates)
-const points: { x: number; y: number }[] = [
-    { x: 3, y: 4 },  // Inside the area
-    { x: 1, y: 2 },  // Outside the area
-    { x: 4, y: 6 },  // Outside the area
-    { x: 5, y: 3 },  // Inside the area
-    { x: 1, y: 1 },  
-    { x: 3, y: 4 },  
-    { x: 2, y: 5 },  
-    { x: 1, y: 5 },  
-    { x: 5, y: 5 },  
-];
+type Point = {
+    x: number;
+    y: number;
+}
+let points: Array<Point> = new Array();
+let x;
+let y;
+for (let i = 0; i < 10; i++) {
+    x = Math.floor(Math.random() * 700);
+    y = Math.floor(Math.random() * 700);
+    let p:Point = {x, y}
+    points.push(p);
+}
+console.log(points);
+
+
 
 // Check if each point is inside the area and log the result
 points.forEach((point, index) => {
@@ -181,7 +190,7 @@ function updateCanvas(input: { x: number; y: number }, isInside: boolean) {
     ctx.fillStyle = isInside ? "green" : "red";
 
     // Draw a rectangle next to the text to indicate the result
-    ctx.fillRect(150, canvasHeight - 25, 15, 15);
+    ctx.fillRect(input.x, input.y, 15, 15);
 
     // Draw the input point
     ctx.fillStyle = "gray";
@@ -221,4 +230,4 @@ function animateNextStep() {
 initializeCanvas();
 
 // Start the animation
-animateNextStep();
+// animateNextStep();
